@@ -1,0 +1,62 @@
+CATEGORY
+--------------------------------
+[check]
+Should not have any public constructors
+Should only be instantiated via its factory method
+
+[check]
+Should be created using the 'of' factory method
+The category name should match the value provided to the factory method.
+
+[]
+should return the same instance for the same name (flyweight pattern)
+Categories with the same name should be the exact same instance to save memory.
+
+[check]
+should capitalize the first letter of its name automatically
+The category's name should be formatted with an initial capital letter.
+
+[check]
+should throw IllegalArgumentException if the name is null
+message: Category name can't be null
+
+[check]
+should throw IllegalArgumentException if the name is empty
+message: Category name can't be blank
+
+[check]
+should throw IllegalArgumentException if the name is blank (whitespace)
+message: Category name can't be blank
+
+Methods:
+[]
+getName()
+
+[]
+of()
+
+
+
+WAREHOUSE
+--------------------------------
+
+
+
+
+
+FOOD PRODUCTS
+--------------------------------
+
+
+
+
+
+
+ELECTRONICS PRODUCTS
+--------------------------------
+
+
+
+
+ELECTRONICS PRODUCTS
+--------------------------------
