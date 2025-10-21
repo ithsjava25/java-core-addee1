@@ -9,6 +9,8 @@ public class Warehouse {
     private static final Map<String, Warehouse> INSTANCES = new ConcurrentHashMap<>();
     private final List<Product> products = new ArrayList<>();
 
+    private final List<Product> changedProducts = new ArrayList<>();
+
     private Warehouse(String name) {
         this.name = name;
     }
@@ -37,6 +39,7 @@ public class Warehouse {
     // clear products
     public void clearProducts(){
         products.clear();
+        changedProducts.clear();
     }
 
     // get all products (unmodified list)
@@ -56,6 +59,11 @@ public class Warehouse {
     public void updateProductPrice(UUID id, BigDecimal newPrice){
         Product product = getProductById(id).orElseThrow(() -> new NoSuchElementException("Product not found with id: " + id));
         product.price(newPrice);
+        changedProducts.add(product);
+    }
+
+    public List<Product> getChangedProducts(){
+        return Collections.unmodifiableList(new ArrayList<>(changedProducts));
     }
 
     // group products by category
