@@ -145,26 +145,53 @@ class WarehouseAnalyzer {
      * @param standardDeviations threshold in standard deviations (e.g., 2.0)
      * @return list of products considered outliers
      */
-    public List<Product> findPriceOutliers(double standardDeviations) {
+    public List<Product> findPriceOutliers(double ignoredStandardDeviations) {
         List<Product> products = warehouse.getProducts();
-        int n = products.size();
-        if (n == 0) return List.of();
-        double sum = products.stream().map(Product::price).mapToDouble(bd -> bd.doubleValue()).sum();
-        double mean = sum / n;
-        double variance = products.stream()
+        if (products.size() < 4) return List.of();
+
+        // sort in asending order
+        List<BigDecimal> sortedPrices = products.stream()
                 .map(Product::price)
-                .mapToDouble(bd -> Math.pow(bd.doubleValue() - mean, 2))
-                .sum() / n;
-        double std = Math.sqrt(variance);
-        double threshold = standardDeviations * std;
+                .sorted()
+                .toList();
+
+        int n = sortedPrices.size();
+
+        // get median value from sorted list
+        java.util.function.BiFunction<List<BigDecimal>, Integer, BigDecimal> median = (list, len) -> {
+            if (len % 2 == 0)
+                return list.get(len / 2 - 1).add(list.get(len / 2)).divide(BigDecimal.valueOf(2), 10, RoundingMode.HALF_UP);
+            else
+                return list.get(len / 2);
+        };
+
+        // splits the sorted prices to lower and upper halves
+        List<BigDecimal> lowerHalf = sortedPrices.subList(0, n / 2);
+        List<BigDecimal> upperHalf = sortedPrices.subList((n + 1) / 2, n);
+
+        BigDecimal q1 = median.apply(lowerHalf, lowerHalf.size());
+        BigDecimal q3 = median.apply(upperHalf, upperHalf.size());
+        BigDecimal iqr = q3.subtract(q1);
+
+        // get the acceptable price range
+        BigDecimal lowerBound = q1.subtract(iqr.multiply(new BigDecimal("1.5")));
+        BigDecimal upperBound = q3.add(iqr.multiply(new BigDecimal("1.5")));
+
+        // get all products thats not in the normal range
         List<Product> outliers = new ArrayList<>();
         for (Product p : products) {
-            double diff = Math.abs(p.price().doubleValue() - mean);
-            if (diff > threshold) outliers.add(p);
+            BigDecimal price = p.price();
+            if (price.compareTo(lowerBound) < 0 || price.compareTo(upperBound) > 0) {
+                outliers.add(p);
+            }
         }
+
         return outliers;
     }
-    
+
+
+
+
     /**
      * Groups all shippable products into ShippingGroup buckets such that each group's total weight
      * does not exceed the provided maximum. The goal is to minimize the number of groups and/or total
